@@ -1,3 +1,3 @@
 # ma-cloud-messaging
 
-![Alt text](documentation/images/technical-workflow.png?raw=true "Title")
+![Technical workflow](./documentation/images/technical-workflow.png?raw=true "Title")
