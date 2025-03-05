@@ -5,7 +5,9 @@ export function Layout() {
     return (
         <>
             <Navbbar/>
-            <Outlet/>
+            <main>
+                <Outlet/>
+            </main>
         </>
     )
 }

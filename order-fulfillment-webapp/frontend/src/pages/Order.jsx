@@ -21,23 +21,36 @@ export function Order() {
     }, [])
 
     return (
-        <div>
-            <button onClick={() => navigate(-1)}>Back</button>
+        <div className="mt-6 ml-12 mr-12">
+            <div class="bg-white p-4 rounded-lg shadow-md mt-4 flex flex-col md:flex-row items-center border border-gray-200 justify-left">
+                <button className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-2 rounded-lg transition" onClick={() => navigate(-1)}>Back</button>
+                <p className="text-lg font-semibold ml-6 mr-10">Order# {order.order_id}</p>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 transform transition mt-6 justify-left">
+                <div className="grid grid-cols-2 gap-4 max-w-md p-1">
+                    <p className="font-semibold text-gray-700">ID</p>
+                    <p className="text-gray-900 text-gray-900 border border-gray-200 rounded-lg p-4 bg-white">{order.message_id}</p>
+                    
+                    <p className="font-semibold text-gray-700">Customer</p>
+                    <p className="text-gray-900 text-gray-900 border border-gray-200 rounded-lg p-4 bg-white">{order.customer}</p>
 
-            <h3>Order# {order.order_id}</h3>
-            <p><b>Customer:</b> {order.customer}</p>
+                    <p className="font-semibold text-gray-700">Order Date</p>
+                    <p className="text-gray-900 border border-gray-200 rounded-lg p-4 bg-white">{order.timestamp?.slice(4, 15)}</p>
 
-            <p><b>Items</b></p>
-            {order.items?.map((orderitem) => {
-                return (
-                    <li>
-                        {orderitem}
-                    </li>
-                )
-            })}
-
-            <p><b>Ordered on:</b> {order.timestamp?.slice(4, 15)} <b>at</b> {order.timestamp?.slice(16, 21)}</p>
-
+                    <p className="font-semibold text-gray-700">Order Time</p>
+                    <p className="text-gray-900 border border-gray-200 rounded-lg p-4 bg-white">{order.timestamp?.slice(16, 21)}</p>
+                </div>
+                <div className="max-w-md p-1">
+                    <p className="font-semibold text-gray-700 mb-3">Items</p>
+                    {order.items?.map((orderitem) => {
+                        return (
+                            <p className="text-gray-900 border border-gray-200 rounded-lg p-4 bg-white mb-2">
+                                {orderitem}
+                            </p>
+                        )
+                    })}  
+                </div>
+            </div>
         </div>
     )
 }

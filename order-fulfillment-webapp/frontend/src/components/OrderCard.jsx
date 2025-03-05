@@ -6,20 +6,15 @@ export function OrderCard({order}) {
     let stringDateTime = dateTime.toString()
 
     return (
-        <Link to={`/order/${order._id}`} className="order">
-            <h3>Order# {order.order_id}</h3>
-            <p><b>Customer:</b> {order.customer}</p>
-
-            <p><b>Items</b></p>
-            {order.items.map((orderitem) => {
-                return (
-                    <li>
-                        {orderitem}
-                    </li>
-                )
-            })}
-
-            <p><b>Ordered on:</b> {stringDateTime.slice(4, 15)} <b>at</b> {stringDateTime.slice(16, 21)}</p>
+        <Link to={`/order/${order._id}`} className="bg-white p-6 rounded-xl shadow-lg border border-gray-300 transform transition hover:scale-105">
+            <h3 className="text-lg font-semibold text-gray-800">Order# {order.order_id}</h3>
+            <p className="text-sm text-gray-500"><b>ID:</b> {order.message_id}</p>
+            <p className="text-gray-600">{order.customer} - {order.items.length} Items</p>
+            <p className="text-sm text-gray-500">{stringDateTime.slice(4, 15)} <b>at</b> {stringDateTime.slice(16, 21)}</p>
+            {order.isDuplicate === true &&
+                <span class="bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-lg">Duplicate</span>
+            }
+            
         </Link>
     )
 }

@@ -16,30 +16,46 @@ MONGO_URI = "mongodb+srv://dtigue:mong0pa55@clustermain.qfo64.mongodb.net/?retry
 DB_NAME = "order-db"
 COLLECTION_NAME = "orders"
 
-# Connect to MongoDB
 client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-# Function to process incoming messages
+# Process incoming messages
 def callback(message):
     try:
-        # Decode message data
-        order_data = json.loads(message.data.decode("utf-8"))
+        order_data = json.loads(message.data.decode("utf-8")) 
         print(f"Received order: {order_data}")
 
-        # Save the order to MongoDB
-        save_to_mongo(order_data)
+        handled_data = handle_duplicates(order_data)
 
-        # Acknowledge the message
+        save_to_mongo(handled_data)
+
         message.ack()
 
-        print(f"Order saved to MongoDB: {order_data}")
+        print(f"Order saved to MongoDB: {handled_data}")
     except Exception as e:
         print(f"Error processing message: {e}")
-        message.nack()  # Negative acknowledgment if processing fails
+        message.nack() 
 
-# Function to save order data to MongoDB
+# Check if message is duplicate and mark as such
+def handle_duplicates(order_message):
+
+    order_message_id = order_message["message_id"]
+
+    query = { "message_id": order_message_id}
+
+    query_count = collection.count_documents(query)
+    
+    print(f"Query count: {query_count}")
+
+    if query_count > 0:
+        order_message["isDuplicate"] = True
+    else:
+        order_message["isDuplicate"] = False
+
+    return order_message
+
+# Save order data to MongoDB
 def save_to_mongo(order):
     try:
         collection.insert_one(order)
@@ -63,5 +79,5 @@ if __name__ == "__main__":
     try:
         streaming_pull_future.result()  # Keeps the subscriber listening indefinitely
     except KeyboardInterrupt:
-        streaming_pull_future.cancel()  # Stop listening on user interruption
+        streaming_pull_future.cancel() 
         print("Subscriber stopped.")

@@ -175,3 +175,4 @@ cython_debug/
 
 # Secrets
 service-account-key.json
+config.py

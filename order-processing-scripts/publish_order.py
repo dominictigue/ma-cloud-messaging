@@ -20,8 +20,9 @@ def publish_order(order_data):
     future = publisher.publish(topic_path, order_json)
     print(f"Published message ID: {future.result()}")
 
-# Example order message
+# Hard code order
 order = {
+    "message_id": "8",
     "order_id": "4",
     "customer": "New Test",
     "items": ["Item1", "Item2"],

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <title>Publish Order</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="container mt-5">
+      
+      <h1 class="mb-4">Publish Order</h1>
+      
+      <form method="POST">
+        <!-- Message ID -->
+        <div class="mb-3" id="message_id_div">
+          <label for="message_id" class="form-label">Message ID:</label>
+          <input type="text" class="form-control" id="message_id" name="message_id">
+        </div>
+        <div class="mb-3">
+          <button type="button" class="btn btn-secondary" id="toggleMessageId">Generate automatically</button>
+          <input type="hidden" id="auto_generate" name="auto_generate" value="false">
+        </div>
+        
+        <!-- Order ID -->
+        <div class="mb-3">
+          <label for="order_id" class="form-label">Order ID:</label>
+          <input type="text" class="form-control" id="order_id" name="order_id" required>
+        </div>
+        
+        <!-- Customer -->
+        <div class="mb-3">
+          <label for="customer" class="form-label">Customer:</label>
+          <input type="text" class="form-control" id="customer" name="customer" required>
+        </div>
+        
+        <!-- Items -->
+        <div class="mb-3">
+          <label for="items" class="form-label">Items (comma separated):</label>
+          <input type="text" class="form-control" id="items" name="items" required>
+        </div>
+        
+        <!-- Total -->
+        <div class="mb-3">
+          <label for="total" class="form-label">Total:</label>
+          <input type="text" class="form-control" id="total" name="total" required>
+        </div>
+        
+        <!-- Timestamp -->
+        <div class="mb-3" id="timestamp_div">
+          <label for="timestamp" class="form-label">Timestamp:</label>
+          <input type="text" class="form-control" id="timestamp" name="timestamp" placeholder="2025-02-27T12:00:00">
+        </div>
+        <div class="mb-3">
+          <button type="button" class="btn btn-secondary" id="toggleTimestamp">Generate automatically</button>
+          <input type="hidden" id="auto_generate_timestamp" name="auto_generate_timestamp" value="false">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Publish Order</button>
+      </form>
+      
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="mt-3">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+      // Message ID Toggling
+      document.getElementById("toggleMessageId").addEventListener("click", function() {
+          var messageIdDiv = document.getElementById("message_id");
+          var autoGenerateInput = document.getElementById("auto_generate");
+          
+          if (autoGenerateInput.value === "false") {
+              messageIdDiv.style.display = "none";
+              autoGenerateInput.value = "true";
+              this.textContent = "Enter manually";
+          } else {
+              messageIdDiv.style.display = "block";
+              autoGenerateInput.value = "false";
+              this.textContent = "Generate automatically";
+          }
+      });
+
+      // Timestamp toggling
+      document.getElementById("toggleTimestamp").addEventListener("click", function() {
+          var timestampDiv = document.getElementById("timestamp");
+          var autoGenerateTimestamp = document.getElementById("auto_generate_timestamp");
+          
+          if (autoGenerateTimestamp.value === "false") {
+              timestampDiv.style.display = "none";
+              autoGenerateTimestamp.value = "true";
+              this.textContent = "Enter manually";
+          } else {
+              timestampDiv.style.display = "block";
+              autoGenerateTimestamp.value = "false";
+              this.textContent = "Generate automatically";
+          }
+      });
+    </script>
+  </body>
+</html>
