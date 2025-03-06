@@ -39,6 +39,16 @@ export function Order() {
 
                     <p className="font-semibold text-gray-700">Order Time</p>
                     <p className="text-gray-900 border border-gray-200 rounded-lg p-4 bg-white">{order.timestamp?.slice(16, 21)}</p>
+
+                    <p className="font-semibold text-gray-700">Duplicate Status</p>
+                    <p className="text-gray-900 border border-gray-200 rounded-lg p-4 bg-white">
+                        {order.isDuplicate === true &&
+                            <span class="bg-red-100 text-red-800 text-sm font-semibold px-3 py-1 rounded-lg">Duplicate</span>
+                        }
+                        {order.isDuplicate === false &&
+                            <span class="bg-green-100 text-green-800 text-sm font-semibold px-3 py-1 rounded-lg">Original</span>
+                        }
+                    </p>
                 </div>
                 <div className="max-w-md p-1">
                     <p className="font-semibold text-gray-700 mb-3">Items</p>

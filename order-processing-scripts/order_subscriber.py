@@ -3,6 +3,7 @@ import json
 import os
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
+import config
 
 # Google cloud configuration
 PROJECT_ID = "silent-scholar-448520-h2"
@@ -12,7 +13,7 @@ SUBSCRIPTION_ID = "ma-order-processing-topic-sub"
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./service-account-key.json"
 
 # MongoDB configuration
-MONGO_URI = "mongodb+srv://dtigue:mong0pa55@clustermain.qfo64.mongodb.net/?retryWrites=true&w=majority&appName=ClusterMain"
+MONGO_URI = config.MONGO_URI
 DB_NAME = "order-db"
 COLLECTION_NAME = "orders"
 
@@ -63,11 +64,11 @@ def save_to_mongo(order):
         print(f"Error saving to MongoDB: {e}")
 
 if __name__ == "__main__":
-    # Ensure the necessary environment variables are set for authentication
+    # Ensure google auth variable is set
     if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
         raise EnvironmentError("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")
 
-    # Initialize the subscriber client
+    # Initialize subscriber client
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(PROJECT_ID, SUBSCRIPTION_ID)
 

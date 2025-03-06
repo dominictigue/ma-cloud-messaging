@@ -49,7 +49,7 @@ def index():
             if timestamp == "":
                 timestamp = str(datetime.now())
         
-        # Process items field
+        # Split up items field
         items = [item.strip() for item in items_str.split(",") if item.strip()]
         
         order = {
