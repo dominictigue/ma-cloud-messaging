@@ -6,25 +6,41 @@ import { SearchBar } from "../components/SearchBar"
 export function Home() {
 
     const [orders, setOrders] = useState([])
+    const [searchQuery, setSearchQuery] = useState("");
+    const [sortOption, setSortOption] = useState("default");
+    const [dupeFilter, setDupeFilter] = useState("showDupes");
+
 
     useEffect(() => {
-        async function loadAllOrders() {
-            const data = await getOrders()
-            data.sort((d1, d2) => new Date(d2.timestamp).getTime() - new Date(d1.timestamp).getTime())
-            setOrders(data) 
+        console.log("Fetching orders with:", { searchQuery, sortOption, dupeFilter });
+        async function fetchOrders() {
+            try {
+                const fetchedOrders = await getOrders({
+                    searchQuery,
+                    sortOption,
+                    dupeFilter,
+                });
+                setOrders(fetchedOrders);
+            } catch (error) {
+                console.error("Error fetching orders:", error);
+            }
         }
-        loadAllOrders()
-    }, [])
+        fetchOrders();
+    }, [searchQuery, sortOption, dupeFilter]); // Dependencies trigger re-fetch
 
     return (
         <div>
             <div className = "ml-12 mr-12">
-                <SearchBar/>
+                <SearchBar
+                onSearch={setSearchQuery}
+                onSortChange={setSortOption}
+                onDupeFilterChange={setDupeFilter}
+                />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 ml-10 mr-10">
                 {orders.map((order) => {
                     return (
-                        <OrderCard order={order}/>
+                        <OrderCard key={order.id || order._id} order={order} />
                     )
                 })}
             </div>

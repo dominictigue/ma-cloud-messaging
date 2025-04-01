@@ -4,16 +4,50 @@ const ObjectId = require("mongodb").ObjectId
 
 let orderRoutes = express.Router()
 
-// Retrieve All
+// Retrieve All with Filters
 orderRoutes.route("/orders").get(async (request, response) => {
-    let db = database.getDb()
-    let data = await db.collection("orders").find({}).toArray()
-    if (data.length > 0) {
-        response.json(data)
-    } else {
-        throw new Error("Data was not found.")
+    const { searchQuery, sortOption, dupeFilter } = request.query;
+    let db = database.getDb();
+
+    console.log("Received query parameters:", { searchQuery, sortOption, dupeFilter });
+
+    let query = {};
+    if (searchQuery) {
+        query.$or = [
+            { order_id: { $regex: searchQuery, $options: "i" } },
+            { customer: { $regex: searchQuery, $options: "i" } },
+        ];
     }
-})
+
+    if (dupeFilter === "hideDupes") {
+        query.isDuplicate = false;
+    }
+
+    let sort = {};
+    if (sortOption === "time") {
+        sort.timestamp = -1;
+    } else if (sortOption === "customer") {
+        sort.customer = 1; 
+    } else if (sortOption === "orderNum") {
+        sort.order_id = 1; 
+    } else if (sortOption === "itemCount") {
+        sort.items = -1; 
+    } else {
+        sort = { timestamp: -1 }; // Default sort by timestamp descending
+    }
+
+    console.log("Query:", query);
+    console.log("Sort:", sort);
+
+    try {
+        let data = await db.collection("orders").find(query).sort(sort).toArray();
+        console.log("Fetched data:", data);
+        response.json(data);
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        response.status(500).send(`Error fetching orders: ${error.message}`);
+    }
+});
 
 // Retrieve One
 orderRoutes.route("/orders/:id").get(async (request, response) => {

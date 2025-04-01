@@ -2,14 +2,22 @@ import axios from "axios";
 
 const URL = "http://localhost:3000"
 
-// Retrieve All
-export async function getOrders() {
-    const response = await axios.get(`${URL}/orders`)
+// Retrieve All with Filters
+export async function getOrders({ searchQuery, sortOption, dupeFilter }) {
+    console.log("Sending request with:", { searchQuery, sortOption, dupeFilter });
+    
+    const params = {
+        searchQuery,
+        sortOption,
+        dupeFilter,
+    };
+
+    const response = await axios.get(`${URL}/orders`, { params });
 
     if (response.status === 200) {
-        return response.data
+        return response.data;
     } else {
-        return
+        return;
     }
 }
 
