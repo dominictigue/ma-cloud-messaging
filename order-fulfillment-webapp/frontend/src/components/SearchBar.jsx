@@ -57,7 +57,15 @@ export function SearchBar({onSearch, onSortChange, onDupeFilterChange, onDateCha
                 onChange={(e) => {
                     console.log("date filter option changed to:", e.target.value);
                     setDateFilterOption(e.target.value);
-                    onDateChange(e.target.value);
+            
+                    if (e.target.value === "custom") {
+                        // Apply previously entered custom dates instantly
+                        const combinedDates = `${customStartDate},${customEndDate}`;
+                        console.log("Applying previously entered custom dates:", combinedDates);
+                        onDateChange(combinedDates);
+                    } else {
+                        onDateChange(e.target.value);
+                    }
                 }}
             >
                 <option className="text-gray-500" value="default">📅</option>

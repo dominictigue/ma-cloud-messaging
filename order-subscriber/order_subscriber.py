@@ -7,8 +7,8 @@ import config
 from datetime import datetime
 
 # Google cloud configuration
-PROJECT_ID = "silent-scholar-448520-h2"
-SUBSCRIPTION_ID = "ma-order-processing-topic-sub"
+PROJECT_ID = config.PROJECT_ID
+SUBSCRIPTION_ID = config.SUBSCRIPTION_ID
 
 # Google cloud access
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = "./service-account-key.json"
