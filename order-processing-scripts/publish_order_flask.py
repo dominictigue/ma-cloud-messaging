@@ -43,11 +43,17 @@ def index():
         # Timestamp toggling
         auto_generate_timestamp = request.form.get("auto_generate_timestamp", "false")
         if auto_generate_timestamp.lower() == "true":
-            timestamp = str(datetime.now())
+            timestamp = datetime.now()
         else:
-            timestamp = request.form.get("timestamp")
-            if timestamp == "":
-                timestamp = str(datetime.now())
+            timestamp_str = request.form.get("timestamp")
+            if not timestamp_str:
+                timestamp = datetime.now()
+            else: 
+                try:
+                    timestamp = datetime.strptime(timestamp_str, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    flash("Invalid timestamp format. Use ISO 8601 format (e.g., '2025-01-01T12:00:00').", "danger")
+                    return redirect(url_for("index"))
         
         # Split up items field
         items = [item.strip() for item in items_str.split(",") if item.strip()]
@@ -58,7 +64,7 @@ def index():
             "customer": customer,
             "items": items,
             "total": float(total) if total else 0,
-            "timestamp": timestamp
+            "timestamp": timestamp.isoformat()
         }
         
         try:

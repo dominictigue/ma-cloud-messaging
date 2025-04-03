@@ -9,16 +9,18 @@ export function Home() {
     const [searchQuery, setSearchQuery] = useState("");
     const [sortOption, setSortOption] = useState("default");
     const [dupeFilter, setDupeFilter] = useState("showDupes");
+    const [dateFilter, setDateFilter] = useState("default");
 
 
     useEffect(() => {
-        console.log("Fetching orders with:", { searchQuery, sortOption, dupeFilter });
+        console.log("Fetching orders with:", { searchQuery, sortOption, dupeFilter, dateFilter});
         async function fetchOrders() {
             try {
                 const fetchedOrders = await getOrders({
                     searchQuery,
                     sortOption,
                     dupeFilter,
+                    dateFilter,
                 });
                 setOrders(fetchedOrders);
             } catch (error) {
@@ -26,7 +28,7 @@ export function Home() {
             }
         }
         fetchOrders();
-    }, [searchQuery, sortOption, dupeFilter]); // Dependencies trigger re-fetch
+    }, [searchQuery, sortOption, dupeFilter, dateFilter]); // Dependencies trigger re-fetch
 
     return (
         <div>
@@ -35,6 +37,7 @@ export function Home() {
                 onSearch={setSearchQuery}
                 onSortChange={setSortOption}
                 onDupeFilterChange={setDupeFilter}
+                onDateChange={setDateFilter}
                 />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6 ml-10 mr-10">

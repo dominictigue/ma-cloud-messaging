@@ -4,6 +4,7 @@ import os
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import config
+from datetime import datetime
 
 # Google cloud configuration
 PROJECT_ID = "silent-scholar-448520-h2"
@@ -27,13 +28,16 @@ def callback(message):
         order_data = json.loads(message.data.decode("utf-8")) 
         print(f"Received order: {order_data}")
 
+        if "timestamp" in order_data:
+            order_data["timestamp"] = convert_date(order_data["timestamp"])
+
         handled_data = handle_duplicates(order_data)
 
         save_to_mongo(handled_data)
 
         message.ack()
 
-        print(f"Order saved to MongoDB: {handled_data}")
+        print(f"Message acknowledged.\nOrder saved to MongoDB: {handled_data}")
     except Exception as e:
         print(f"Error processing message: {e}")
         message.nack() 
@@ -51,10 +55,23 @@ def handle_duplicates(order_message):
 
     if query_count > 0:
         order_message["isDuplicate"] = True
+        print("Order marked as duplicate.")
     else:
         order_message["isDuplicate"] = False
+        print("Order was original.")
 
     return order_message
+
+# Convert date string to datetime object
+def convert_date(date_str):
+    if date_str[-1] != "Z":
+        date_str += "Z"
+
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+    except ValueError:
+        print(f"Date format error: {date_str}")
+        return None
 
 # Save order data to MongoDB
 def save_to_mongo(order):

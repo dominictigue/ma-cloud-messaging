@@ -3,13 +3,14 @@ import axios from "axios";
 const URL = "http://localhost:3000"
 
 // Retrieve All with Filters
-export async function getOrders({ searchQuery, sortOption, dupeFilter }) {
-    console.log("Sending request with:", { searchQuery, sortOption, dupeFilter });
+export async function getOrders({ searchQuery, sortOption, dupeFilter, dateFilter }) {
+    console.log("Sending request with:", { searchQuery, sortOption, dupeFilter, dateFilter});
     
     const params = {
         searchQuery,
         sortOption,
         dupeFilter,
+        dateFilter,
     };
 
     const response = await axios.get(`${URL}/orders`, { params });

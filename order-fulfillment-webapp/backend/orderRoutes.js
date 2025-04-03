@@ -6,10 +6,10 @@ let orderRoutes = express.Router()
 
 // Retrieve All with Filters
 orderRoutes.route("/orders").get(async (request, response) => {
-    const { searchQuery, sortOption, dupeFilter } = request.query;
+    const { searchQuery, sortOption, dupeFilter, dateFilter } = request.query;
     let db = database.getDb();
 
-    console.log("Received query parameters:", { searchQuery, sortOption, dupeFilter });
+    console.log("Received query parameters:", { searchQuery, sortOption, dupeFilter, dateFilter });
 
     let query = {};
     if (searchQuery) {
@@ -22,6 +22,51 @@ orderRoutes.route("/orders").get(async (request, response) => {
     if (dupeFilter === "hideDupes") {
         query.isDuplicate = false;
     }
+
+    if (dateFilter) {
+        const today = new Date();
+        let startDate, endDate;
+
+        switch (dateFilter) {
+            case "today":
+                startDate = new Date(today.setHours(0, 0, 0, 0));
+                endDate = new Date(today.setHours(23, 59, 59, 999));
+                break;
+            case "yesterday":
+                startDate = new Date(today.setDate(today.getDate() - 1));
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date(today.setHours(23, 59, 59, 999));
+                break;
+            case "lastWeek":
+                startDate = new Date(today.setDate(today.getDate() - 7));
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date();
+                break;
+            case "lastMonth":
+                startDate = new Date(today.setMonth(today.getMonth() - 1));
+                startDate.setHours(0, 0, 0, 0);
+                endDate = new Date();
+                break;
+            default:
+                // Custom date in format "MM/DD/YYYY,MM/DD/YYYY"
+                const startCustomDate = new Date(dateFilter.split(",")[0]);
+                const endCustomDate = new Date(dateFilter.split(",")[1]);
+
+                if (!isNaN(startCustomDate) && !isNaN(endCustomDate)) {
+                    startDate = new Date(startCustomDate.setHours(0, 0, 0, 0));
+                    endDate = new Date(endCustomDate.setHours(23, 59, 59, 999));
+
+                    startDate.setDate(startCustomDate.getDate() + 1);
+                    endDate.setDate(endCustomDate.getDate() + 1);
+                }
+                break;
+        }
+
+        if (startDate && endDate) {
+            query.timestamp = { $gte: startDate, $lt: endDate };
+        }
+    }
+
 
     let sort = {};
     if (sortOption === "time") {
