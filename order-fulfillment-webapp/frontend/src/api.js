@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const URL = "http://localhost:3000"
+const URL = "https://backend-29112224148.us-central1.run.app"
 
 // Retrieve All with Filters
 export async function getOrders({ searchQuery, sortOption, dupeFilter, dateFilter }) {

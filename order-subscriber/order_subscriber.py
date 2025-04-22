@@ -5,6 +5,9 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import config
 from datetime import datetime
+from flask import Flask
+from threading import Thread, Lock
+from collections import deque
 
 # Google cloud configuration
 PROJECT_ID = config.PROJECT_ID
@@ -18,9 +21,13 @@ MONGO_URI = config.MONGO_URI
 DB_NAME = "order-db"
 COLLECTION_NAME = "orders"
 
-client = MongoClient(MONGO_URI, server_api=ServerApi('1'))
+client = MongoClient(MONGO_URI, server_api=ServerApi('1'), tls=True)
 db = client[DB_NAME]
 collection = db[COLLECTION_NAME]
+
+# In-memory cache for cold start deduplication
+processing_message_ids = set()
+cache_lock = Lock()
 
 # Process incoming messages
 def callback(message):
@@ -33,11 +40,14 @@ def callback(message):
 
         handled_data = handle_duplicates(order_data)
 
-        save_to_mongo(handled_data)
+        # Attempt to save to MongoDB
+        if save_to_mongo(handled_data):
+            message.ack()
+            print(f"Message acknowledged.")
+        else:
+            message.nack()
+            print(f"Message not acknowledged: {handled_data}")
 
-        message.ack()
-
-        print(f"Message acknowledged.\nOrder saved to MongoDB: {handled_data}")
     except Exception as e:
         print(f"Error processing message: {e}")
         message.nack() 
@@ -47,15 +57,25 @@ def handle_duplicates(order_message):
 
     order_message_id = order_message["message_id"]
 
+    # Cache duplicate detection
+    with cache_lock:
+        if order_message_id in processing_message_ids:
+            order_message["isDuplicate"] = True
+            print("Duplicate message found in cache.")
+            return order_message
+        
+        # Add to processing set
+        processing_message_ids.add(order_message_id)
+        
+    # MongoDB duplicate detection
     query = { "message_id": order_message_id}
-
     query_count = collection.count_documents(query)
     
     print(f"Query count: {query_count}")
 
     if query_count > 0:
         order_message["isDuplicate"] = True
-        print("Order marked as duplicate.")
+        print("Duplicate message found in MongoDB.")
     else:
         order_message["isDuplicate"] = False
         print("Order was original.")
@@ -77,10 +97,29 @@ def convert_date(date_str):
 def save_to_mongo(order):
     try:
         collection.insert_one(order)
+        print(f"\nOrder saved to MongoDB: {order}")
     except Exception as e:
         print(f"Error saving to MongoDB: {e}")
+        return False
+    finally:
+        with cache_lock:
+            processing_message_ids.discard(order["message_id"])
+    return True
+
+app = Flask(__name__)
+
+@app.route("/")
+def health_check():
+    return "OK", 200
+
+def start_flask():
+    app.run(host="0.0.0.0", port=8080)
 
 if __name__ == "__main__":
+    flask_thread = Thread(target=start_flask)
+    flask_thread.daemon = True
+    flask_thread.start()
+    
     # Ensure google auth variable is set
     if not os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
         raise EnvironmentError("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.")

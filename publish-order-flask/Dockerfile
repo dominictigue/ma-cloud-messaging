@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the port the app runs on
-EXPOSE 5000
+EXPOSE 8080
 
 # Set environment variables
 ENV FLASK_APP=publish_order_flask.py
@@ -24,4 +24,4 @@ ENV FLASK_RUN_HOST=0.0.0.0
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/service-account-key.json
 
 # Run the Flask app
-CMD ["flask", "run"]
+CMD ["python", "publish_order_flask.py"]

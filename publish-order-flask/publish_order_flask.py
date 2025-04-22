@@ -41,6 +41,13 @@ def index():
         items_str = request.form.get("items")
         total = request.form.get("total")
         
+        # Validate total
+        try:
+            total = float(total) if total else 0
+        except ValueError:
+            flash("Invalid total value. Please enter a numeric value.", "danger")
+            return redirect(url_for("index"))
+
         # Timestamp toggling
         auto_generate_timestamp = request.form.get("auto_generate_timestamp", "false")
         if auto_generate_timestamp.lower() == "true":
@@ -49,12 +56,17 @@ def index():
             timestamp = request.form.get("timestamp")
             if timestamp == "":
                 timestamp = str(datetime.now().isoformat())
-                
-        
+            else:
+                # Validate timestamp
+                try:
+                    datetime.fromisoformat(timestamp)
+                except ValueError:
+                    flash("Invalid timestamp format. Please use ISO 8601 format.", "danger")
+                    return redirect(url_for("index"))
+
         # Split up items field
         items = [item.strip() for item in items_str.split(",") if item.strip()]
         
-
         order = {
             "message_id": message_id,
             "order_id": order_id,
@@ -77,5 +89,6 @@ def index():
     return render_template('index.html')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 8080)) 
+    app.run(host="0.0.0.0", port=port, debug=True)
 
