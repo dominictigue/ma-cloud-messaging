@@ -1,4 +1,7 @@
 from google.cloud import pubsub_v1
+import google.cloud.logging
+import logging
+import sys
 import json
 import os
 from pymongo.mongo_client import MongoClient
@@ -21,19 +24,26 @@ MONGO_URI = config.MONGO_URI
 DB_NAME = "order-db"
 COLLECTION_NAME = "orders"
 
-client = MongoClient(MONGO_URI, server_api=ServerApi('1'), tls=True)
-db = client[DB_NAME]
+mongo_client = MongoClient(MONGO_URI, server_api=ServerApi('1'), tls=True)
+db = mongo_client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
 # In-memory cache for cold start deduplication
 processing_message_ids = set()
 cache_lock = Lock()
 
+# Logging
+google_logging_client = google.cloud.logging.Client()
+google_logging_client.setup_logging()
+
+logger=logging.getLogger(__name__)
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
 # Process incoming messages
 def callback(message):
     try:
         order_data = json.loads(message.data.decode("utf-8")) 
-        print(f"Received order: {order_data}")
+        logger.info(f"Received order: {order_data}")
 
         if "timestamp" in order_data:
             order_data["timestamp"] = convert_date(order_data["timestamp"])
@@ -43,13 +53,13 @@ def callback(message):
         # Attempt to save to MongoDB
         if save_to_mongo(handled_data):
             message.ack()
-            print(f"Message acknowledged.")
+            logger.info(f"Message acknowledged.\n")
         else:
             message.nack()
-            print(f"Message not acknowledged: {handled_data}")
+            logger.info(f"Message not acknowledged: {handled_data}\n")
 
     except Exception as e:
-        print(f"Error processing message: {e}")
+        logger.info(f"Error processing message: {e}")
         message.nack() 
 
 # Check if message is duplicate and mark as such
@@ -61,7 +71,7 @@ def handle_duplicates(order_message):
     with cache_lock:
         if order_message_id in processing_message_ids:
             order_message["isDuplicate"] = True
-            print("Duplicate message found in cache.")
+            logger.info("Duplicate message found in cache.")
             return order_message
         
         # Add to processing set
@@ -71,14 +81,14 @@ def handle_duplicates(order_message):
     query = { "message_id": order_message_id}
     query_count = collection.count_documents(query)
     
-    print(f"Query count: {query_count}")
+    logger.info(f"Query count: {query_count}")
 
     if query_count > 0:
         order_message["isDuplicate"] = True
-        print("Duplicate message found in MongoDB.")
+        logger.info("Duplicate message found in MongoDB.")
     else:
         order_message["isDuplicate"] = False
-        print("Order was original.")
+        logger.info("Order was original.")
 
     return order_message
 
@@ -86,20 +96,19 @@ def handle_duplicates(order_message):
 def convert_date(date_str):
     if date_str[-1] != "Z":
         date_str += "Z"
-
     try:
         return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
     except ValueError:
-        print(f"Date format error: {date_str}")
+        logger.info(f"Date format error: {date_str}")
         return None
 
 # Save order data to MongoDB
 def save_to_mongo(order):
     try:
         collection.insert_one(order)
-        print(f"\nOrder saved to MongoDB: {order}")
+        logger.info(f"\nOrder saved to MongoDB: {order}")
     except Exception as e:
-        print(f"Error saving to MongoDB: {e}")
+        logger.error(f"Error saving to MongoDB: {e}")
         return False
     finally:
         with cache_lock:
@@ -128,7 +137,7 @@ if __name__ == "__main__":
     subscriber = pubsub_v1.SubscriberClient()
     subscription_path = subscriber.subscription_path(PROJECT_ID, SUBSCRIPTION_ID)
 
-    print(f"Listening for messages on {subscription_path}...")
+    logger.info(f"Listening for messages on {subscription_path}...")
 
     # Subscribe to the topic and listen for messages
     streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
@@ -137,4 +146,7 @@ if __name__ == "__main__":
         streaming_pull_future.result()  # Keeps the subscriber listening indefinitely
     except KeyboardInterrupt:
         streaming_pull_future.cancel() 
-        print("Subscriber stopped.")
+        logger.info("Subscriber stopped.")
+    finally:
+        google_logging_client.logger("shutdown").info("Flushing and closing Cloud Logging client.")
+        google_logging_client.close()

@@ -69,23 +69,46 @@ orderRoutes.route("/orders").get(async (request, response) => {
 
 
     let sort = {};
-    if (sortOption === "time") {
-        sort.timestamp = -1;
-    } else if (sortOption === "customer") {
-        sort.customer = 1; 
-    } else if (sortOption === "orderNum") {
-        sort.order_id = 1; 
-    } else if (sortOption === "itemCount") {
-        sort.items = -1; 
-    } else {
-        sort = { timestamp: -1 }; // Default sort by timestamp descending
+    if (sortOption) {
+        const [field, order] = sortOption.split(":"); 
+        const sortOrder = order === "desc" ? -1 : 1; 
+        if (field === "time") {
+            sort = { timestamp: sortOrder };
+        } else if (field === "customer") {
+            sort = { customer: sortOrder };
+        } else if (field === "orderNum") {
+            sort = { order_id: sortOrder };
+        } else if (field === "itemCount") {
+            sort = { items: sortOrder };
+        } else {
+            sort = { timestamp: -1 };
+        }
     }
 
     console.log("Query:", query);
     console.log("Sort:", sort);
 
     try {
-        let data = await db.collection("orders").find(query).sort(sort).toArray();
+        let data;
+
+        // Check if sorting by itemCount
+        if (sortOption && sortOption.startsWith("itemCount")) {
+            const [field, order] = sortOption.split(":");
+            const sortOrder = order === "desc" ? -1 : 1;
+
+            // Use aggregation to count items and sort by itemCount
+            data = await db.collection("orders")
+                .aggregate([
+                    { $match: query },
+                    { $addFields: { itemCount: { $size: "$items" } } }, 
+                    { $sort: { itemCount: sortOrder } } 
+                ])
+                .toArray();
+        } else {
+            // Regular sort otherwise
+            data = await db.collection("orders").find(query).sort(sort).toArray();
+        }
+
         console.log("Fetched data:", data);
         response.json(data);
     } catch (error) {

@@ -41,6 +41,14 @@ def index():
         items_str = request.form.get("items")
         total = request.form.get("total")
         
+        # Convert order_id to int if possible
+        try:
+            if order_id.isdigit():
+                order_id = int(order_id)
+        except AttributeError:
+            flash("Invalid order ID. Please enter a valid value.", "danger")
+            return redirect(url_for("index"))
+        
         # Validate total
         try:
             total = float(total) if total else 0

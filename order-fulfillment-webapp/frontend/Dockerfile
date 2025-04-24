@@ -7,6 +7,9 @@ WORKDIR /app
 COPY package.json .
 RUN npm install
 
+# Explicitly install esbuild binary
+RUN npm install esbuild@latest --save-dev
+
 # Copy the rest of the application
 COPY . .
 

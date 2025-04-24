@@ -1,5 +1,4 @@
 Flask
 google-cloud-pubsub
+google-cloud-logging
 pymongo
-Flask
-Thread

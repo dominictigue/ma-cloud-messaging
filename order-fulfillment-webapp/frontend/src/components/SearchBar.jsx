@@ -7,6 +7,7 @@ export function SearchBar({onSearch, onSortChange, onDupeFilterChange, onDateCha
     const [dateFilterOption, setDateFilterOption] = useState("");
     const [customStartDate, setCustomStartDate] = useState("");
     const [customEndDate, setCustomEndDate] = useState("");
+    const [sortOrder, setSortOrder] = useState("asc");
 
     const dupeFilterColors = {
         showDupes: "bg-red-200 text-red-800 hover:bg-red-300",
@@ -21,7 +22,16 @@ export function SearchBar({onSearch, onSortChange, onDupeFilterChange, onDateCha
         lastMonth: "w-auto",
         custom: "w-auto",
     };
-    
+
+    const toggleSortOrder = () => {
+        const newOrder = sortOrder === "asc" ? "desc" : "asc";
+        setSortOrder(newOrder);
+        
+        if (selectedOption) {
+            onSortChange(`${selectedOption}:${newOrder}`);
+        }
+    };
+
     return (
         <div className="bg-white p-4 rounded-lg shadow-md mt-4 flex flex-wrap items-center border border-gray-200 gap-x-2 gap-y-2">
             {/* Search Input */}
@@ -110,8 +120,12 @@ export function SearchBar({onSearch, onSortChange, onDupeFilterChange, onDateCha
                 id="sort-filter"
                 className="p-3 border border-gray-400 rounded-lg bg-gray-100 hover:bg-gray-200"
                 onChange={(e) => {
-                    console.log("sort option changed to:", e.target.value);
-                    onSortChange(e.target.value);
+                    const field = e.target.value;
+                    setSelectedOption(field);
+
+                    if (field) {
+                        onSortChange(`${field}:${sortOrder}`);
+                    }
                 }}
             >
                 <option className="bg-gray-100 text-gray-500" value="default">Sort by:</option>
@@ -120,6 +134,16 @@ export function SearchBar({onSearch, onSortChange, onDupeFilterChange, onDateCha
                 <option className="bg-gray-100" value="customer">Customer Name</option>
                 <option className="bg-gray-100" value="itemCount"># of Items</option>
             </select>
+            
+            {/* Sort Order Toggle */}
+            <button
+                    className={`p-2 rounded-lg border ${
+                        sortOrder === "asc" ? "p-2 border border-gray-400 rounded-lg bg-gray-100 hover:bg-gray-200" : "p-2 border border-gray-400 rounded-lg bg-gray-100 hover:bg-gray-200"
+                    }`}
+                    onClick={toggleSortOrder}
+                >
+                    {sortOrder === "asc" ? "▲" : "▼"}
+                </button>
 
             {/* Duplicate Filter */}
             <select

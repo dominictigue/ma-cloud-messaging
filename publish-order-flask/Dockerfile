@@ -23,5 +23,5 @@ ENV FLASK_APP=publish_order_flask.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV GOOGLE_APPLICATION_CREDENTIALS=/app/service-account-key.json
 
-# Run the Flask app
-CMD ["python", "publish_order_flask.py"]
+# Use Gunicorn to serve the Flask app
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "publish_order_flask:app"]
