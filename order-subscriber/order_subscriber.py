@@ -28,10 +28,6 @@ mongo_client = MongoClient(MONGO_URI, server_api=ServerApi('1'), tls=True)
 db = mongo_client[DB_NAME]
 collection = db[COLLECTION_NAME]
 
-# In-memory cache for cold start deduplication
-processing_message_ids = set()
-cache_lock = Lock()
-
 # Logging
 google_logging_client = google.cloud.logging.Client()
 google_logging_client.setup_logging()
@@ -66,16 +62,6 @@ def callback(message):
 def handle_duplicates(order_message):
 
     order_message_id = order_message["message_id"]
-
-    # Cache duplicate detection
-    with cache_lock:
-        if order_message_id in processing_message_ids:
-            order_message["isDuplicate"] = True
-            logger.info("Duplicate message found in cache.")
-            return order_message
-        
-        # Add to processing set
-        processing_message_ids.add(order_message_id)
         
     # MongoDB duplicate detection
     query = { "message_id": order_message_id}
@@ -110,9 +96,6 @@ def save_to_mongo(order):
     except Exception as e:
         logger.error(f"Error saving to MongoDB: {e}")
         return False
-    finally:
-        with cache_lock:
-            processing_message_ids.discard(order["message_id"])
     return True
 
 app = Flask(__name__)
